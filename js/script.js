@@ -306,7 +306,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { error } = await sb.auth.signInWithOtp({
             email,
             options: {
-                emailRedirectTo: window.location.origin + window.location.pathname,
+                emailRedirectTo: window.location.origin,
+                redirectTo: window.location.origin,
                 shouldCreateUser: true,
             },
         });
