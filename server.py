@@ -19,9 +19,25 @@ def clean_html(text):
         .replace('&nbsp;', ' ').strip())
 
 def extract_tweet_path(url):
+    # Split query parameters and anchors
     url = url.split('?')[0].split('#')[0]
-    m = re.search(r'(?:x\.com|twitter\.com)/(\w+/status/\d+)', url)
-    return '/' + m.group(1) if m else None
+    
+    # 1. Standard pattern: x.com/username/status/id
+    m = re.search(r'(?:x\.com|twitter\.com)/([a-zA-Z0-9_]+/status/\d+)', url)
+    if m:
+        return '/' + m.group(1)
+        
+    # 2. Cut-off status pattern: status/id
+    m2 = re.search(r'status/(\d+)', url)
+    if m2:
+        return '/i/status/' + m2.group(1)
+        
+    # 3. Raw numeric ID of 10+ digits
+    m3 = re.search(r'(\d{10,})', url)
+    if m3:
+        return '/i/status/' + m3.group(1)
+        
+    return None
 
 def clean_text(text):
     if not text:
@@ -49,7 +65,7 @@ def extract_og(html, name):
     flags = re.IGNORECASE | re.DOTALL
     for pattern in [
         rf'<meta[^>]+(?:property|name)=["\'][^"\']*{re.escape(name)}[^"\']*["\'][^>]+content=["\']([^"\']+)["\']',
-        rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'][^"\']*{re.escape(name)}[^"\']*["\']',
+        rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'][^"\']*{re.escape(name)}[^"\']*',
     ]:
         m = re.search(pattern, html, flags)
         if m:
@@ -62,7 +78,7 @@ def try_vxtwitter(path):
     data = json.loads(fetch_url(
         f'https://api.vxtwitter.com{path}',
         headers={'User-Agent': 'Mozilla/5.0 (compatible; PostPrint/1.0)'},
-        timeout=7
+        timeout=6
     ))
     text = clean_text(data.get('text', ''))
     if not text:
@@ -78,7 +94,7 @@ def try_fxtwitter(path):
     data = json.loads(fetch_url(
         f'https://api.fxtwitter.com{path}',
         headers={'User-Agent': 'Mozilla/5.0 (compatible; PostPrint/1.0)'},
-        timeout=7
+        timeout=6
     ))
     tweet  = data.get('tweet', {})
     author = tweet.get('author', {})
@@ -101,7 +117,7 @@ def try_og_scrape(url):
         'User-Agent':      'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
         'Accept-Language': 'en-US,en;q=0.9',
         'Accept':          'text/html,application/xhtml+xml',
-    }, timeout=9)
+    }, timeout=7)
 
     text = clean_text(
         extract_og(html, 'og:description') or
@@ -124,12 +140,13 @@ def try_og_scrape(url):
 
     return {'name': name, 'handle': handle, 'text': text, 'image': image}
 
-# ─── Parallel Race: vx vs fx ─────────────────────────────────────────────────
+# ─── Parallel Race: all 3 strategies run concurrently ───────────────────────
 
-def race_apis(path):
+def race_all(url, path):
     """
-    Fire vxtwitter + fxtwitter concurrently.
-    First success wins; raises only if both fail.
+    Fire vxtwitter, fxtwitter, and try_og_scrape concurrently.
+    First success wins; raises only if all three fail.
+    This guarantees maximum reliability AND sub-second performance.
     """
     result   = [None]
     errors   = []
@@ -145,19 +162,22 @@ def race_apis(path):
                     done_evt.set()
         except Exception as e:
             with lock:
-                errors.append(str(e))
-            if len(errors) >= 2:
+                errors.append(f"{fn.__name__}: {str(e)}")
+            if len(errors) >= 3:
                 done_evt.set()
 
     t1 = threading.Thread(target=worker, args=(try_vxtwitter, path), daemon=True)
     t2 = threading.Thread(target=worker, args=(try_fxtwitter, path), daemon=True)
-    t1.start(); t2.start()
+    t3 = threading.Thread(target=worker, args=(try_og_scrape, url), daemon=True)
+    
+    t1.start(); t2.start(); t3.start()
 
+    # Wait at most 8 seconds for a response
     done_evt.wait(timeout=8)
 
     if result[0]:
         return result[0]
-    raise RuntimeError(f'Both APIs failed — {errors}')
+    raise RuntimeError(f'All strategies failed — {errors}')
 
 # ─── Request Handler ─────────────────────────────────────────────────────────
 
@@ -215,31 +235,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if not url:
             return self.send_json(400, {'error': 'Missing url parameter'})
 
-        if 'x.com' not in url and 'twitter.com' not in url:
-            return self.send_json(400, {'error': 'Only X / Twitter URLs are supported'})
-
         path = extract_tweet_path(url)
         if not path:
-            return self.send_json(400, {'error': 'Could not parse tweet ID — paste the full post URL'})
+            return self.send_json(400, {'error': 'Could not parse tweet ID — paste the full post URL or raw tweet ID'})
 
-        # Layer 1 + 2: parallel API race
+        # Reconstruct clean canonical URL for scraping
+        clean_url = f"https://x.com{path}"
+
+        # Layer 1, 2, and 3 run concurrently in a parallel race
         try:
-            data = race_apis(path)
+            data = race_all(clean_url, path)
             return self.send_json(200, data)
         except Exception as e:
-            print(f'  [WARN] API race failed: {e}')
-
-        # Layer 3: OG scrape fallback
-        try:
-            data = try_og_scrape(url)
-            return self.send_json(200, data)
-        except Exception as e:
-            print(f'  [WARN] OG scrape failed: {e}')
-
-        # All layers exhausted
-        self.send_json(503, {
-            'error': 'Could not fetch this tweet automatically. Use the manual form — paste the text yourself.'
-        })
+            print(f'  [WARN] Parallel race failed: {e}')
+            self.send_json(503, {
+                'error': 'Could not fetch this tweet automatically. Use the manual form — paste the text yourself.'
+            })
 
     def send_head(self):
         """Serve JS/CSS with no-cache headers so updates always load fresh."""

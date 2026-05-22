@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const updateZoom = () => {
         zoomLevelEl.textContent = `${zoomLevel}%`;
-        if (window.innerWidth > 768) paperContainer.style.transform = `scale(${zoomLevel / 100})`;
+        paperContainer.style.transform = `scale(${zoomLevel / 100})`;
     };
     updateZoom();
     document.getElementById('zoom-in')?.addEventListener('click',  () => { if (zoomLevel < 150) { zoomLevel += 10; updateZoom(); } });
@@ -669,8 +669,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Fetch logic ───────────────────────────────────────────────────
     const doFetch = async (url, btnTextEl, errorEl) => {
-        if (!url || (!url.includes('x.com') && !url.includes('twitter.com'))) {
-            errorEl.textContent = 'Please paste a valid X/Twitter URL.';
+        const hasDigits = /\d{10,}/.test(url);
+        const hasDomain = url.includes('x.com') || url.includes('twitter.com');
+        if (!url || (!hasDigits && !hasDomain)) {
+            errorEl.textContent = 'Please paste a valid X/Twitter URL or Tweet ID.';
             return;
         }
         errorEl.textContent = '';

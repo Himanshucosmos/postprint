@@ -412,8 +412,4 @@ body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--black);colo
   .paper-scroll{height:300px;}
 }
 
-/* Mobile A4 preview scale */
-@media screen and (max-width:900px){.paper-container{transform:scale(.50)!important;transform-origin:top center;}}
-@media screen and (max-width:768px){.paper-container{transform:scale(.43)!important;transform-origin:top center;}}
-@media screen and (max-width:480px){.paper-container{transform:scale(.34)!important;transform-origin:top center;}}
-@media screen and (max-width:360px){.paper-container{transform:scale(.28)!important;transform-origin:top center;}}
+
