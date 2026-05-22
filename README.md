@@ -27,17 +27,17 @@ PostPrint bridges the gap between pixels and paper, converting digital social me
 
 ## ✦ Key Features
 
-### 1. Bulletproof Parallel Fetch Engine ⚡
+### 1. Bulletproof Parallel Fetch Engine 
 *   **Race-Condition Fetching**: Concurrently queries `vxtwitter` and `fxtwitter` APIs in parallel to fetch tweet content with sub-second response times.
 *   **Discordbot OG Fallback**: If standard API gateways are blocked, a third-layer parser replicates Discord's user-agent to scrape OG metadata directly from the source.
 *   **Ultimate Resilience**: Fully isolated request paths. If all auto-fetch methods fail, a beautiful manual layout editor lets you design the sheet from scratch.
 
-### 2. High-End Typographic System 🎨
+### 2. High-End Typographic System 
 *   **Aesthetic Balance**: Leverages **Syne** (tracked tight for strong titles), **Space Grotesk** (for architectural layout details), and **DM Sans** (for elegant readability).
 *   **Atmospheric Accents**: Features a sleek obsidian dark mode background with a subtle dot grid texture and atmospheric radial purple orbs that glow like a brilliant white light.
 *   **Interactive Previews**: A real-time, high-fidelity browser A4 viewport with zoom features (`-`, `+`, and scale indicators) that matches the paper print layout precisely.
 
-### 3. Print-Ready A4 Engine 🖨️
+### 3. Print-Ready A4 Engine 
 *   **Three Layout Modes**:
     *   `Exact`: Prints the post at its natural pixel density.
     *   `Fill 1 Page`: Smart-scales the content to fill an entire physical A4 sheet beautifully—no matter how short or long the post.
@@ -126,69 +126,3 @@ CREATE TRIGGER on_auth_user_created
 
 ---
 
-## ✦ Getting Started
-
-### Prerequisites
-*   Python 3.x
-
-### 1. Clone & Setup
-```bash
-git clone https://github.com/Himanshucosmos/postprint.git
-cd postprint
-```
-
-### 2. Configure Environment Variables
-Open `js/script.js` and set up your Supabase project keys and payment endpoints at the top of the file:
-
-```javascript
-const SUPABASE_URL   = 'https://your-supabase-id.supabase.co';
-const SUPABASE_ANON  = 'your-anon-public-key';
-const UPI_ID         = 'yourname@upi';
-const CREATOR_EMAIL  = 'your@email.com';
-const PRICE_INR      = 1000;
-const FREE_LIMIT     = 12;
-```
-
-> [!TIP]
-> If you leave `SUPABASE_URL` and `SUPABASE_ANON` empty, the system automatically runs in **Standalone Mode** using local browser storage! No cloud setup is required to test locally.
-
-### 3. Run Locally
-Launch the asynchronous Python backend server (which handles parallel fetch requests, local CORS, and live-reloading static directories):
-
-```bash
-python3 server.py
-```
-
-The server is now live at: **[http://localhost:8084](http://localhost:8084)**.
-
----
-
-## ✦ Manual Subscriber Administration
-When a user subscribes via UPI, run this query in your Supabase SQL Editor to grant subscription privileges (replaces with their specific account email):
-
-```sql
-UPDATE public.profiles
-SET paid_until = NOW() + INTERVAL '30 days'
-WHERE email = 'subscriber@example.com';
-```
-
-Or view your current subscriber status overview instantly:
-```sql
-SELECT email, uses, paid_until,
-  CASE WHEN paid_until > NOW() THEN '✓ Active' ELSE '✗ Expired' END AS status
-FROM profiles
-ORDER BY paid_until DESC NULLS LAST;
-```
-
----
-
-## ✦ Technical Highlights
-*   **Zero-Dependency Server**: Implemented entirely inside standard library modules (`http.server`, `urllib`, `threading`, `json`, `re`) for extreme portability.
-*   **Fault-Tolerant CSS Print Layouts**: Resolves print viewport calculations using physical absolute `mm` coordinates and scales them seamlessly inside flex rows.
-*   **Modern Web Aesthetics**: Implemented in fully hand-tailored vanilla CSS with elegant custom backdrop filters, gradient borders, and responsive design systems.
-
----
-
-<p align="center">
-  Made with love by <a href="https://x.com/himanshucosmos"><strong>Himanshu @himanshucosmos</strong></a> ✦
-</p>
