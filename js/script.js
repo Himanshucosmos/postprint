@@ -147,9 +147,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const executeDownload = async (fn) => {
-        try { await incrementUses(); } catch(e) {}
-        try { updateUseBadge(); } catch(e) {}
-        try { fn(); } catch(e) { console.warn('printFn threw:', e); }
+        window._onDownloadSuccess = async () => {
+            window._onDownloadSuccess = null; // single-use
+            try { await incrementUses(); } catch(e) {}
+            try { updateUseBadge(); } catch(e) {}
+        };
+        try {
+            fn();
+        } catch(e) {
+            window._onDownloadSuccess = null;
+            console.warn('printFn threw:', e);
+        }
     };
 
     // ════════════════════════════════════════════════════════════════════
@@ -802,7 +810,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         pc.style.width = '210mm';
         // Small settle delay then print
         setTimeout(() => {
-            try { window.print(); } catch(e) { alert('Print failed. Use Ctrl+P / Cmd+P to print manually.'); }
+            try {
+                window.print();
+                if (window._onDownloadSuccess) window._onDownloadSuccess();
+            } catch(e) {
+                window._onDownloadSuccess = null;
+                alert('Print failed. Use Ctrl+P / Cmd+P to print manually.');
+            }
             // Restore after print dialog closes
             setTimeout(() => {
                 pc.style.transform = prev.transform;
