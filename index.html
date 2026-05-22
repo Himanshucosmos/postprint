@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <meta name="theme-color" content="#06060d">
+    <title>PostPrint — Turn Any Post Into A Print-Ready Sheet</title>
+    <meta name="description" content="Convert any X/Twitter post into a beautiful print-ready A4 PDF. Paste a link, get a wall-ready printout in seconds.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style/style.css?v=15">
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-logo">Post<span class="logo-dot">Print</span></div>
+    <div class="nav-links">
+        <a href="https://x.com/himanshucosmos" target="_blank" class="nav-link">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            @himanshucosmos
+        </a>
+        <a href="https://github.com/Himanshucosmos" target="_blank" class="nav-link">GitHub</a>
+        <a href="https://www.chai4.me/himanshucosmos" target="_blank" class="nav-link">☕ Chai 4 Me</a>
+    </div>
+    <div class="nav-right">
+        <div id="nav-user-wrap" class="nav-user-wrap"></div>
+        <button class="nav-cta" id="nav-try-btn">Try it free →</button>
+    </div>
+</nav>
+
+<section class="hero" id="hero">
+    <div class="hero-body">
+        <div class="hero-left">
+            <div class="hero-tag">✦ Thoughts deserve permanence</div>
+            <h1 class="hero-heading">
+                <span class="h-white">Printing</span><br>
+                <span class="h-white">posts that</span><br>
+                <span class="h-muted">actually</span><br>
+                <span class="h-muted">matter.</span>
+            </h1>
+            <div class="hero-avatars">
+                <div class="hav" style="background:linear-gradient(135deg,#5b4fcf,#8b5cf6)">H</div>
+                <div class="hav" style="background:linear-gradient(135deg,#9333ea,#c084fc)">J</div>
+                <div class="hav" style="background:linear-gradient(135deg,#2563eb,#60a5fa)">A</div>
+                <div class="hav" style="background:linear-gradient(135deg,#0891b2,#38bdf8)">R</div>
+                <span class="hav-label">Trusted by creators who think in print</span>
+            </div>
+            <p class="hero-desc">We believe the best thoughts deserve<br>to live beyond a screen — also on walls.<br>Turn any post into a print-ready A4.</p>
+            <div class="hero-form">
+                <input type="text" id="hero-url" class="hero-input" placeholder="https://x.com/user/status/…" autocomplete="off">
+                <button class="hero-btn" id="hero-fetch-btn"><span id="hero-btn-text">Generate PDF</span></button>
+                <p id="hero-error" class="hero-error"></p>
+            </div>
+        </div>
+
+        <div class="hero-right">
+            <div class="card-fan">
+                <div class="fan-card fc3"></div>
+                <div class="fan-card fc2"></div>
+                <div class="fan-card fc1">
+                    <div class="fc1-inner">
+                        <div class="fc1-row"><div class="fc1-av">J</div><div class="fc1-lines"><div class="fc1-line"></div><div class="fc1-line short"></div></div></div>
+                        <div class="fc1-body"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-card" id="hero-preview-card">
+                <div class="pc-bar">
+                    <span class="pc-dot"></span><span class="pc-dot"></span><span class="pc-dot"></span>
+                    <span class="pc-label">preview.pdf</span>
+                    <span class="pc-badge">A4</span>
+                </div>
+                <div class="pc-body" id="preview-mini"></div>
+                <div class="pc-foot">
+                    <button class="pc-download-btn" id="download-btn">↓ Download A4</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-bottom">
+        <div class="hb-left" id="hero-scroll-cue">
+            <span class="hb-label">SEE OUR TOOL</span>
+            <span class="hb-arrow">↓</span>
+        </div>
+        <div class="hb-right">
+            <span class="hb-label">SCROLL NOW</span>
+            <span class="hb-arrow bounce">↓</span>
+        </div>
+    </div>
+</section>
+
+<!-- TOOL SECTION -->
+<section class="tool-section" id="tool">
+    <div class="tool-container">
+        <div class="tool-controls">
+            <div class="eyebrow">✦ THE TOOL</div>
+            <h2 class="tool-heading">Turn any tweet into<br>a print-ready sheet.</h2>
+
+            <!-- Use-counter badge -->
+            <div class="use-counter-wrap">
+                <span class="use-counter" id="use-counter">12 free left</span>
+            </div>
+
+            <!-- Layout toggle -->
+            <div class="layout-toggle-group">
+                <span class="layout-toggle-label">Layout</span>
+                <div class="layout-toggle" role="group">
+                    <button class="layout-btn" data-mode="exact" title="Tweet at natural size">
+                        <span class="lt-icon">⬛</span> Exact
+                    </button>
+                    <button class="layout-btn active" data-mode="fill" title="Fill one A4 page">
+                        <span class="lt-icon">⬜</span> Fill 1 Page
+                    </button>
+                    <button class="layout-btn" data-mode="multi" title="Multiple pages">
+                        <span class="lt-icon">▣</span> Multi-page
+                    </button>
+                </div>
+                <p class="layout-hint" id="layout-hint">Expands to fill one A4 page</p>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">Paste your X / Twitter link</label>
+                <div class="input-row">
+                    <input type="text" id="tool-url" class="tool-input" placeholder="https://x.com/…/status/…">
+                    <button class="tool-fetch-btn" id="tool-fetch-btn"><span id="tool-btn-text">Fetch</span></button>
+                </div>
+                <p id="tool-error" class="tool-error"></p>
+            </div>
+
+            <div class="divider-line"><span>or enter manually</span></div>
+
+            <button class="manual-toggle" id="manual-toggle" aria-expanded="false">
+                <span>Enter manually</span>
+                <span class="toggle-arrow">▼</span>
+            </button>
+            <div class="manual-form" id="manual-form-body">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="m-name">Name</label>
+                        <input type="text" id="m-name" placeholder="Himanshu">
+                    </div>
+                    <div class="form-field">
+                        <label for="m-handle">Handle</label>
+                        <input type="text" id="m-handle" placeholder="@himanshucosmos">
+                    </div>
+                </div>
+                <div class="form-field full">
+                    <label for="m-text">Tweet text</label>
+                    <textarea id="m-text" rows="4" placeholder="Paste the tweet text here…"></textarea>
+                </div>
+                <div class="form-field full">
+                    <label for="m-img">Profile photo</label>
+                    <input type="file" id="m-img" accept="image/*">
+                </div>
+                <button class="update-btn" id="manual-update-btn">↻ Update Preview</button>
+            </div>
+        </div>
+
+        <div class="tool-preview">
+            <div class="preview-panel">
+                <div class="panel-bar">
+                    <div class="panel-bar-left">
+                        <span class="panel-dot red"></span>
+                        <span class="panel-dot yellow"></span>
+                        <span class="panel-dot green"></span>
+                        <span class="panel-title">A4 Preview</span>
+                    </div>
+                    <div class="panel-zoom">
+                        <button id="zoom-out">−</button>
+                        <span id="zoom-level">65%</span>
+                        <button id="zoom-in">+</button>
+                    </div>
+                </div>
+                <div class="paper-scroll">
+                    <div class="paper-container" id="paper-container"></div>
+                </div>
+                <div class="panel-footer">
+                    <span class="page-pill" id="pab-pages">1 page</span>
+                    <button class="download-pdf-btn" id="tool-download-btn">
+                        <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M6 9l4 4 4-4"/><path d="M3 17h14"/></svg>
+                        Download A4 PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-section">
+    <div class="how-container">
+        <div class="eyebrow light">✦ HOW IT WORKS</div>
+        <h2 class="how-heading">Three steps.<br>One print.</h2>
+        <div class="how-grid">
+            <div class="how-card"><div class="how-num">01</div><h3>Paste the link</h3><p>Drop any x.com or twitter.com post URL into the input above.</p></div>
+            <div class="how-card"><div class="how-num">02</div><h3>See the preview</h3><p>PostPrint formats your post on a beautiful A4 layout instantly.</p></div>
+            <div class="how-card"><div class="how-num">03</div><h3>Print via Blinkit</h3><p>Download the PDF and order a print on Blinkit — delivered to your door.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- Sticky mobile download bar -->
+<div class="mobile-dl-bar" id="mobile-dl-bar">
+    <button class="mobile-dl-btn" id="mobile-download-btn">
+        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M6 9l4 4 4-4"/><path d="M3 17h14"/></svg>
+        Download A4 PDF
+    </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     AUTH MODAL — Sign in with magic link
+════════════════════════════════════════════════════════════ -->
+<div class="auth-overlay" id="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="auth-modal">
+        <button class="auth-close" id="auth-close" aria-label="Close">✕</button>
+
+        <!-- Step 1: Email input -->
+        <div class="auth-step" id="auth-step-1">
+            <div class="auth-logo">Post<span>Print</span></div>
+            <h2 class="auth-title" id="auth-title">Sign in to continue</h2>
+            <p class="auth-subtitle">You've used all <strong>12 free downloads</strong>. Sign in or create an account to subscribe and keep printing.</p>
+            <div class="auth-field">
+                <label class="auth-label" for="auth-email">Email address</label>
+                <input type="email" id="auth-email" class="auth-input" placeholder="you@example.com" autocomplete="email" inputmode="email">
+            </div>
+            <button class="auth-btn" id="auth-send-btn">Send magic link →</button>
+            <p class="auth-error" id="auth-error"></p>
+            <p class="auth-legal">No password needed. We'll create an account if you don't have one.</p>
+        </div>
+
+        <!-- Step 2: Inbox confirmation -->
+        <div class="auth-step hidden" id="auth-step-2">
+            <div class="auth-inbox-icon">
+                <svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="14" fill="rgba(124,58,255,.15)"/><path d="M8 16l16 11L40 16" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round"/><rect x="8" y="14" width="32" height="22" rx="3" stroke="#c084fc" stroke-width="2.5"/></svg>
+            </div>
+            <h2 class="auth-title">Check your inbox</h2>
+            <p class="auth-inbox-msg">We sent a magic link to</p>
+            <div class="auth-email-pill" id="auth-sent-email">you@example.com</div>
+            <p class="auth-inbox-sub">Click the link in the email to sign in instantly — no password needed.</p>
+            <div class="auth-tip">💡 Don't see it? Check your spam or promotions folder.</div>
+            <button class="auth-resend" id="auth-resend">← Use a different email</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAYWALL MODAL — Subscribe via UPI
+════════════════════════════════════════════════════════════ -->
+<div class="paywall-overlay" id="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="pw-title">
+    <div class="paywall-modal">
+        <button class="pw-close" id="pw-close" aria-label="Close">✕</button>
+
+        <div class="pw-header">
+            <div class="pw-badge">☕ PostPrint Pro</div>
+            <h2 class="pw-title" id="pw-title">You've used <span id="pw-uses">12</span> free prints</h2>
+            <div class="pw-user-email-row" id="pw-user-email-row" style="display:none">
+                <span class="pw-user-dot"></span>
+                Signed in as <strong id="pw-user-email"></strong>
+            </div>
+            <p class="pw-subtitle">Subscribe for one month to unlock unlimited downloads, all layout modes, and priority support.</p>
+        </div>
+
+        <!-- Plan -->
+        <div class="pw-plan">
+            <div class="pw-plan-header">
+                <span class="pw-plan-name">Supporter Plan</span>
+                <div class="pw-plan-pricing">
+                    <span class="pw-plan-price">₹1,000</span>
+                    <span class="pw-plan-period">/ month</span>
+                    <span class="pw-plan-usd">≈ $10</span>
+                </div>
+            </div>
+            <ul class="pw-features">
+                <li><span class="pw-check">✓</span> Unlimited PDF downloads</li>
+                <li><span class="pw-check">✓</span> All 3 layout modes (Exact · Fill · Multi)</li>
+                <li><span class="pw-check">✓</span> Priority support via X DM</li>
+                <li><span class="pw-check">✓</span> Keeps PostPrint alive ❤️</li>
+            </ul>
+        </div>
+
+        <!-- UPI QR + payment -->
+        <div class="pw-upi-box">
+            <div class="pw-upi-label">Scan to pay ₹1,000 via any UPI app</div>
+            <div class="pw-qr-wrap">
+                <img
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=upi://pay?pa=himanshu.lawliet%40okicici%26pn=Himanshu%20Sharma%26am=1000%26cu=INR%26tn=PostPrint%20Subscription"
+                    alt="UPI QR Code" class="pw-qr" id="pw-qr">
+                <div class="pw-qr-apps">
+                    <span>GPay</span><span>PhonePe</span><span>Paytm</span><span>Any UPI</span>
+                </div>
+            </div>
+            <div class="pw-upi-id-wrap">
+                <span class="pw-upi-id" id="pw-upi-id">himanshu.lawliet@okicici</span>
+                <button class="pw-copy-btn" id="pw-copy-upi">
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="9" height="9" rx="1.5"/><path d="M3 11V3a1 1 0 011-1h8"/></svg>
+                    Copy ID
+                </button>
+            </div>
+            <p class="pw-upi-hint">Or type the UPI ID manually in any payment app</p>
+        </div>
+
+        <div class="pw-confirm-note">
+            After paying, tap below. Your subscription will be active for 30 days.<br>
+            Confirmation to <strong id="pw-confirm-email">your email</strong> · Questions? Mail <a href="mailto:himanshu.cosmos9@gmail.com">himanshu.cosmos9@gmail.com</a>
+        </div>
+
+        <button class="pw-paid-btn" id="pw-paid-btn">
+            ✓ I've Paid — Unlock for 30 Days
+        </button>
+
+        <p class="pw-trust">
+            Questions? DM <a href="https://x.com/himanshucosmos" target="_blank">@himanshucosmos</a> on X
+        </p>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div class="pp-toast" id="pp-toast"></div>
+
+<script src="js/script.js?v=15"></script>
+</body>
+</html>
