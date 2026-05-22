@@ -52,15 +52,6 @@ PostPrint bridges the gap between pixels and paper, converting digital social me
 
 ---
 
-## ✦ Showcase
-
-<p align="center">
-  <img src="assets/showcase-mobile.png" alt="PostPrint Mobile Viewport" width="45%" style="margin-right: 2%;">
-  <img src="favicon.png" alt="PostPrint Icon" width="45%">
-</p>
-
----
-
 ## ✦ Architecture Overview
 
 The system runs on a highly decoupled architecture utilizing a multi-threaded Python server, an optimized client-side JS print layout composer, and Supabase database handlers.
@@ -85,44 +76,3 @@ flowchart TD
 ```
 
 ---
-
-## ✦ Database Schema (Supabase)
-
-To enable authentication, rate limiting, and subscriptions, set up the following schema in your Supabase project's SQL Editor:
-
-```sql
--- Create a public profiles table connected to Supabase Auth
-CREATE TABLE public.profiles (
-  id         UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  email      TEXT,
-  uses       INTEGER NOT NULL DEFAULT 0,
-  paid_until TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Enable Row Level Security (RLS)
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Set up secure access policies
-CREATE POLICY "select_own"  ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "insert_own"  ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "update_own"  ON public.profiles FOR UPDATE USING (auth.uid() = id);
-
--- Create a database trigger to auto-provision profile rows on sign-up
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, uses)
-  VALUES (NEW.id, NEW.email, 0)
-  ON CONFLICT (id) DO NOTHING;
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-```
-
----
-
