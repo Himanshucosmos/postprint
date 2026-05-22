@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await executeDownload(fn);
         } else if (status === 'needs-auth') {
             window._pendingDownload = fn;
-            try { showAuthModal(); } catch(e) { fn(); } // if modal fails, just download
+            try { showAuthModal(true); } catch(e) { fn(); } // if modal fails, just download
         } else {
             window._pendingDownload = fn;
             try { showPaywall(); } catch(e) { fn(); }
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('nav-signout-btn')?.addEventListener('click', signOut);
         } else {
             wrap.innerHTML = `<button class="nav-signin" id="nav-signin-btn">Sign in</button>`;
-            document.getElementById('nav-signin-btn')?.addEventListener('click', showAuthModal);
+            document.getElementById('nav-signin-btn')?.addEventListener('click', () => showAuthModal(false));
         }
     };
 
@@ -257,8 +257,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ════════════════════════════════════════════════════════════════════
     //  AUTH MODAL
     // ════════════════════════════════════════════════════════════════════
-    const showAuthModal = () => {
+    const showAuthModal = (isForced = false) => {
         resetAuthForm();
+        const subtitle = document.querySelector('.auth-subtitle');
+        if (subtitle) {
+            if (isForced === true) {
+                subtitle.innerHTML = `You've used all <strong>12 free downloads</strong>. Sign in or create an account to subscribe and keep printing.`;
+            } else {
+                subtitle.innerHTML = `Sign in or create an account to access your profile, track downloads, and manage subscriptions.`;
+            }
+        }
         document.getElementById('auth-overlay')?.classList.add('open');
         document.body.style.overflow = 'hidden';
         setTimeout(() => document.getElementById('auth-email')?.focus(), 150);
